@@ -10,14 +10,14 @@ const char index_html[] PROGMEM = R"==+==(
       {
         position:absolute;
         top: 10px;
-        left: 400px;
+        left: 600px;
         z-index: 1;
       }
       .arrow
       {
         position:absolute;
         top: 10px;
-        left: 543px;
+        left: 743px;
         z-index: 2;
       }
   </style>
@@ -26,7 +26,7 @@ const char index_html[] PROGMEM = R"==+==(
   <p style="color:DarkKhaki">
   <br><br>
   
-Current heading: %CURRENT_HEADING%
+Current azimuth: %CURRENT_AZIMUTH%
 <br>
 
 <img src="https://raw.githubusercontent.com/FastjacktheV/ESP8266/master/images/compass.jpg" height="300" width="300" class="compass">
@@ -43,7 +43,7 @@ Move the antenna:
 </form>
 <br>
 Antenna moving status: %DIRECTION_STATUS%
-<br>
+<br><br><br><br><br><br><br><br><br><br><br>
 
 </p>
 

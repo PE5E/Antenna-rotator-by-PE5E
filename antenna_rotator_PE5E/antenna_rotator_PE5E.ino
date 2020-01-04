@@ -1,25 +1,25 @@
 
 
 /* Antenna rotator by PE5E
- *  
  * 
- *  
- *  
- *  
+ * This project is based upon the ESP8266 development board
+ * There is a webserver at port 80 to show the user the status of the rotator and offer manual control
+ * There is also a service listening on port 4533 for rotctl commands
+ * 
  *  
  *  
  *  
  */
 
-#include <ESPAsyncWebServer.h>
-#include "index.h" //HTML webpage contents
-// #include <ESPAsyncTCP.h>
- 
-const char* ssid = "Ziggo";
-const char* password = "Tijdelijk_Netwerk_Voor_Gasten#";
- 
+// define data here that needs to be used by multiple libs // // // 
+float current_azimuth =      0;
+float current_elevation =    0;
+float requested_azimuth =    0;
+float requested_elevation =  0;
+int webserver_address =      80;
+int rotctl_address =         4533; 
+
 int ledPin = 2; // built in led
-int current_heading = 0; 
 
 enum moving_status {
   standstill,
@@ -29,14 +29,24 @@ enum moving_status {
   down
 };
 const char * moving_status_text[] = {"standing still", "clockwise (to the right)", "counter clockwise (to the left)", "UP", "DOWN"};
-
 moving_status direction_status = standstill;
 
-AsyncWebServer http_server(80);
+// until here is the shared data // // // // // // // // // // // //
+
+#include "ESPAsyncWebServer.h"
+#include "ESPAsyncTCP.h"           // used by rotctl
+#include "index.h"                 // HTML webpage contents
+#include "controlport_server.h"    // controlport server
+
+ 
+const char* ssid = "Ziggo";
+const char* password = "Tijdelijk_Netwerk_Voor_Gasten#";
+ 
+
+
+AsyncWebServer http_server(webserver_address);
 AsyncWebSocket ws("/ws"); // access at ws://[esp ip]/ws
 AsyncEventSource events("/events"); // event source (Server-Sent events)
-
-// AsyncServer control_port(4453);
 
 void onRequest(AsyncWebServerRequest *request){
   //Handle Unknown Request
@@ -51,10 +61,8 @@ String processor(const String& var)
     return moving_status_text[direction_status];
   }
 
-  if(var == "CURRENT_HEADING"){
-    char buffer[10];
-    itoa(current_heading, buffer, 10);
-    return buffer;
+  if(var == "CURRENT_AZIMUTH"){
+    return String(current_azimuth);
   }
   
   return String();
@@ -85,22 +93,11 @@ void processRequest(AsyncWebServerRequest *request){
         direction_status = standstill;
       }
     }
-
-  //List all parameters
-//  int params = request->params();
-//  for(int i=0;i<params;i++){
-//    AsyncWebParameter* p = request->getParam(i);
-//    if(p->isFile()){ //p->isPost() is also true
-//      Serial.printf("FILE[%s]: %s, size: %u\n", p->name().c_str(), p->value().c_str(), p->size());
-//    } else if(p->isPost()){
-//      Serial.printf("POST[%s]: %s\n", p->name().c_str(), p->value().c_str());
-//    } else {
-//      Serial.printf("GET[%s]: %s\n", p->name().c_str(), p->value().c_str());
-//    }
-//  }  
 }
 
 void setup() {
+  pinMode(ledPin, OUTPUT);
+  digitalWrite(ledPin, HIGH); // HIGH is off
   Serial.begin(115200);
   delay(10);
 
@@ -121,15 +118,13 @@ void setup() {
     request->send_P(200, "text/html", index_html, processor);
   });
 
-  pinMode(ledPin, OUTPUT);
-  digitalWrite(ledPin, HIGH); // HIGH is off
+  AsyncServer* control_server = new AsyncServer(rotctl_address); // server for rotctl commands
+  control_server->onClient(&handleNewClient, control_server);
  
 // Connect to WiFi network
   Serial.println();
-  Serial.println();
   Serial.print("Connecting to ");
   Serial.println(ssid);
-   
   WiFi.begin(ssid, password);
  
   while (WiFi.status() != WL_CONNECTED) {
@@ -140,12 +135,11 @@ void setup() {
   Serial.println("");
   Serial.println("WiFi connected");
  
-  // Start the server
+  // Start the servers
   http_server.begin();
-//  control_port.begin();
+  control_server->begin();
   
-  Serial.println("http_server started");
-// Print the IP address
+  Serial.println("http server and control server started");
   Serial.print("Use this URL to connect: ");
   Serial.print("http://");
   Serial.print(WiFi.localIP());
@@ -160,14 +154,5 @@ void loop() {
     digitalWrite(ledPin, HIGH); // HIGH is off
   }
 
-  if(direction_status == cw) {
-    current_heading = (current_heading + 1) % 360;
-  }
-  else if(direction_status == ccw) {
-    current_heading -= 1;
-    if(current_heading == -1) {
-      current_heading = 359;
-    }
-  }
-  delay(100); // to prevent overheating with async ;-)
+  delay(100); 
 }
