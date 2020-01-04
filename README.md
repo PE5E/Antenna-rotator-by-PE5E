@@ -1,2 +1,4 @@
 # ESP8266
-public files for the ESP8266 development board
+Antenna rotator project by PE5E
+this project runs on the ESP8266 development board
+
