@@ -64,6 +64,10 @@ String processor(const String& var)
   if(var == "CURRENT_AZIMUTH"){
     return String(current_azimuth);
   }
+
+  if(var == "CURRENT_ELEVATION"){
+    return String(current_elevation);
+  }
   
   return String();
 }
