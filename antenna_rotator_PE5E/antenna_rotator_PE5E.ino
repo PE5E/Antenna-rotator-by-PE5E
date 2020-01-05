@@ -12,14 +12,15 @@
  */
 
 // define data here that needs to be used by multiple libs // // // 
-float current_azimuth =      0;
-float current_elevation =    0;
-float requested_azimuth =    0;
-float requested_elevation =  0;
-int webserver_address =      80;
-int rotctl_address =         4533; 
+float current_azimuth =      180  ;
+float current_elevation =    0    ;
+float requested_azimuth =    180  ;
+float requested_elevation =  0    ;
+int   webserver_address =    80   ;
+int   rotctl_address =       4533 ; 
 
-int ledPin = 2; // built in led
+int   ledPin =               2    ; // built in led
+bool  manual_control =       false;
 
 enum moving_status {
   standstill,
@@ -28,7 +29,7 @@ enum moving_status {
   up,
   down
 };
-const char * moving_status_text[] = {"standing still", "clockwise (to the right)", "counter clockwise (to the left)", "UP", "DOWN"};
+const char * moving_status_text[] = {"standing still", "going clockwise", "going counter clockwise", "going up", "going down"};
 moving_status direction_status = standstill;
 
 // until here is the shared data // // // // // // // // // // // //
@@ -68,6 +69,43 @@ String processor(const String& var)
   if(var == "CURRENT_ELEVATION"){
     return String(current_elevation);
   }
+
+  if(var == "REQUESTED_AZIMUTH"){
+    return String(requested_azimuth);
+  }
+
+  if(var == "REQUESTED_ELEVATION"){
+    return String(requested_elevation);
+  }
+  
+  if(var == "MANUAL_CONTROL_TEXT"){
+      if(manual_control) {
+        return String("manually");
+      }
+      else {
+        return String("automatically");
+      }
+  }
+
+  if(var == "CURRENT_ACTION_DEG"){
+      switch(direction_status) {
+        case standstill:
+          return String("0");
+          break;
+        case cw:
+          return String("90");
+          break;
+        case ccw:
+          return String("270");
+          break;
+        case up:
+          return String("0");
+          break;
+        case down:
+          return String("180");
+          break;
+      }
+  }
   
   return String();
 }
@@ -96,6 +134,28 @@ void processRequest(AsyncWebServerRequest *request){
       else if(directionCommand == "STOP") {
         direction_status = standstill;
       }
+    }
+
+    if(request->hasParam("controlmode")) {
+      AsyncWebParameter* p = request->getParam("controlmode");
+      String control_mode = p->value().c_str();
+      if(control_mode == "MANUAL") {
+        manual_control = true;
+      }
+      else if(control_mode == "AUTOMATIC") {
+        manual_control = false;
+      }
+    }
+
+    if(request->hasParam("azi")) {
+      AsyncWebParameter* p = request->getParam("azi");
+      String azi = p->value().c_str();
+      requested_azimuth = azi.toFloat();
+    }
+    if(request->hasParam("ele")) {
+      AsyncWebParameter* p = request->getParam("ele");
+      String ele = p->value().c_str();
+      requested_elevation = ele.toFloat();
     }
 }
 
