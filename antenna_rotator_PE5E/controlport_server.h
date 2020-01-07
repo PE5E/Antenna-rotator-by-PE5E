@@ -1,3 +1,6 @@
+#ifndef CONTROLPORT_SERVER_H
+#define CONTROLPORT_SERVER_H
+
 // controlport server
 #include "rotctl_implementation.h" // implementation of the rotctl protocol
 
@@ -53,3 +56,5 @@ static void handleNewClient(void* arg, AsyncClient* client) {
   client->onDisconnect(&handleDisconnect, NULL);
   client->onTimeout(&handleTimeOut, NULL);
 }
+
+#endif // CONTROLPORT_SERVER_H

@@ -2,9 +2,10 @@
 
 /* Antenna rotator by PE5E
  * 
- * This project is based upon the ESP8266 development board
- * There is a webserver at port 80 to show the user the status of the rotator and offer manual control
- * There is also a service listening on port 4533 for rotctl commands
+ * This project is based upon the ESP8266 development board.
+ * The rotator motors and sensors can be connected to the ESP8266 board, eventually through a bridge.
+ * There is a webserver at port 80 to show the user the status of the rotator and offer manual control.
+ * There is also a service listening on port 4533 for rotctl commands, so you can control the rotator with a pc.
  * 
  *  
  *  
@@ -18,6 +19,7 @@ float requested_azimuth =    180  ;
 float requested_elevation =  0    ;
 int   webserver_address =    80   ;
 int   rotctl_address =       4533 ; 
+int   rotation_speed =       100  ; // value between 1 - 100
 
 int   ledPin =               2    ; // built in led
 bool  manual_control =       false;
@@ -38,7 +40,7 @@ moving_status direction_status = standstill;
 #include "ESPAsyncTCP.h"           // used by rotctl
 #include "index.h"                 // HTML webpage contents
 #include "controlport_server.h"    // controlport server
-
+#include "hardware_management.h"   // controlling motors and reading sensors
  
 const char* ssid = "Ziggo";
 const char* password = "Tijdelijk_Netwerk_Voor_Gasten#";
@@ -48,6 +50,8 @@ const char* password = "Tijdelijk_Netwerk_Voor_Gasten#";
 AsyncWebServer http_server(webserver_address);
 AsyncWebSocket ws("/ws"); // access at ws://[esp ip]/ws
 AsyncEventSource events("/events"); // event source (Server-Sent events)
+
+Hardware_mgmt hardware;
 
 void onRequest(AsyncWebServerRequest *request){
   //Handle Unknown Request
@@ -116,6 +120,7 @@ void onEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventTyp
 }
 
 void processRequest(AsyncWebServerRequest *request){
+  if(manual_control == true) {
     if(request->hasParam("direction")) {
       AsyncWebParameter* p = request->getParam("direction");
       String directionCommand = p->value().c_str();
@@ -136,17 +141,6 @@ void processRequest(AsyncWebServerRequest *request){
       }
     }
 
-    if(request->hasParam("controlmode")) {
-      AsyncWebParameter* p = request->getParam("controlmode");
-      String control_mode = p->value().c_str();
-      if(control_mode == "MANUAL") {
-        manual_control = true;
-      }
-      else if(control_mode == "AUTOMATIC") {
-        manual_control = false;
-      }
-    }
-
     if(request->hasParam("azi")) {
       AsyncWebParameter* p = request->getParam("azi");
       String azi = p->value().c_str();
@@ -156,6 +150,18 @@ void processRequest(AsyncWebServerRequest *request){
       AsyncWebParameter* p = request->getParam("ele");
       String ele = p->value().c_str();
       requested_elevation = ele.toFloat();
+    }
+  }
+
+    if(request->hasParam("controlmode")) {
+      AsyncWebParameter* p = request->getParam("controlmode");
+      String control_mode = p->value().c_str();
+      if(control_mode == "MANUAL") {
+        manual_control = true;
+      }
+      else if(control_mode == "AUTOMATIC") {
+        manual_control = false;
+      }
     }
 }
 
