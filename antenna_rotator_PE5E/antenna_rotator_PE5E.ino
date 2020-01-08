@@ -19,10 +19,12 @@ float requested_azimuth =    180  ;
 float requested_elevation =  0    ;
 int   webserver_address =    80   ;
 int   rotctl_address =       4533 ; 
-int   rotation_speed =       100  ; // value between 1 - 100
+int   rotation_speed =       100  ; // percentage of the max speed
 
 int   ledPin =               2    ; // built in led
 bool  manual_control =       false;
+
+String error_content_html = ""; // this string will show on HTML page if not empty
 
 enum moving_status {
   standstill,
@@ -51,7 +53,7 @@ AsyncWebServer http_server(webserver_address);
 AsyncWebSocket ws("/ws"); // access at ws://[esp ip]/ws
 AsyncEventSource events("/events"); // event source (Server-Sent events)
 
-Hardware_mgmt hardware;
+// Hardware_mgmt hardware;
 
 void onRequest(AsyncWebServerRequest *request){
   //Handle Unknown Request
@@ -82,6 +84,10 @@ String processor(const String& var)
     return String(requested_elevation);
   }
   
+  if(var == "ROTATION_SPEED"){
+    return String(rotation_speed);
+  }
+  
   if(var == "MANUAL_CONTROL_TEXT"){
       if(manual_control) {
         return String("manually");
@@ -110,7 +116,17 @@ String processor(const String& var)
           break;
       }
   }
+
+  if(var == "ERROR_CODE_HTML") {
+    if(error_content_html != "") {
+      String html = R"12345abcd(<div style="padding:10px;border:1px solid;border-radius:5px;color:#ff0000"><H2 style="color:#ff0000">Error</H2><b style="color:#ff0000">)12345abcd";
+      html += error_content_html;
+      html += "</b></div>"; 
+      return html;
+    }
+  }
   
+    
   return String();
 }
 
@@ -120,6 +136,8 @@ void onEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventTyp
 }
 
 void processRequest(AsyncWebServerRequest *request){
+  error_content_html = ""; // remove last error
+  
   if(manual_control == true) {
     if(request->hasParam("direction")) {
       AsyncWebParameter* p = request->getParam("direction");
@@ -150,6 +168,16 @@ void processRequest(AsyncWebServerRequest *request){
       AsyncWebParameter* p = request->getParam("ele");
       String ele = p->value().c_str();
       requested_elevation = ele.toFloat();
+      if(requested_elevation > 90.0) {
+        error_content_html = "Elevation is more than the maximum value. Please select a lower number.";
+        Serial.println("Error. Elevation above max");
+      }
+    }
+
+    if(request->hasParam("set_speed")) {
+      AsyncWebParameter* p = request->getParam("set_speed");
+      String ele = p->value().c_str();
+      rotation_speed = ele.toInt();
     }
   }
 

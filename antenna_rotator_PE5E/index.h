@@ -29,62 +29,92 @@ const char index_html[] PROGMEM = R"==+==(
         font-family: Garamond;
         color: #ffc380;
       }
+      h2 {
+        padding: 0px;
+        margin: 0px;
+      }
       h3 {
         padding: 0px;
         margin: 0px;
       }
       .compass
       {
-        position:absolute;
+        position: absolute;
         top: 150px;
         left: 40px;
         z-index: 1;
       }
       .arrow
       {
-        position:absolute;
+        position: absolute;
         top: 150px;
         left: 183px;
         z-index: 2;
       }
       .elevations
       {
-        position:absolute;
+        position: absolute;
         top: 150px;
         left: 370px;
         z-index: 1;
       }
       .arrow_left
       {
-        position:absolute;
+        position: absolute;
         top: 438px;
         left: 370px;
         z-index: 2;
       }
       .arrow_action
       {
-        position:absolute;
-        top: 250px;
+        position: absolute;
+        top: 300px;
         left: 730px;
         z-index: 1;
       }
       .cur_azi
       {
-        position:absolute;
+        position: absolute;
         top: 455px;
         left: 90px;
       }
       .cur_ele
       {
-        position:absolute;
+        position: absolute;
         top: 455px;
         left: 400px;
       }
       .cur_action
       {
-        position:absolute;
+        position: absolute;
         top: 455px;
         left: 725px;        
+      }
+      .speed_bar_front
+      {
+        height: 20px;
+        width: %ROTATION_SPEED%px;
+        background-color: #990011;
+        position: absolute;
+        top: 150px;
+        left: 725px;
+        z-index: 2
+      }
+      .speed_bar_back
+      {
+        height:20px;
+        width: 100px;
+        background-color: #008811;
+        position: absolute;
+        top: 150px;
+        left: 725px;
+        z-index: 1
+      }
+      .speed_text
+      {
+        position: absolute;
+        top: 180px;
+        left: 725px;
       }
   </style>
   <style>
@@ -114,10 +144,16 @@ const char index_html[] PROGMEM = R"==+==(
 <br>Requested azimuth: %REQUESTED_AZIMUTH%</div>
 <div class="cur_ele">Current elevation:    %CURRENT_ELEVATION%
 <br>Requested elevation: %REQUESTED_ELEVATION%</div>
+<div class="speed_bar_front"></div>
+<div class="speed_bar_back"></div>
+<div class="speed_text">Speed: %ROTATION_SPEED%</div>
 <div class="cur_action">Rotator status:
 <br>%DIRECTION_STATUS%</div>
 <br>
 </div>
+<br>
+
+%ERROR_CODE_HTML%
 <br>
 
 <div style="padding:10px;border:1px solid;border-radius:5px">
@@ -148,7 +184,13 @@ The rotator is now controlled %MANUAL_CONTROL_TEXT%
   Request elevation: <input type="text" value="%CURRENT_ELEVATION%" name="ele" style="background:black;margin:3"><br>
   <input type="submit" value="Request">
 </form>
-<br><br>
+<br>
+
+<form action = "/action" method="get" id="request_speed">
+  Set new maximum speed percentage:  <input type="number" min="1" max="100" step="1" value="%ROTATION_SPEED%" name="set_speed" style="background:black;margin:3"><br>
+  <input type="submit" value="Set speed">
+</form>
+<br>
 
 </div>
 <br><br>
