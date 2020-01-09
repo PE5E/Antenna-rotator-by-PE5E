@@ -24,9 +24,11 @@
 
 class Hardware_mgmt {
   public:
-    Hardware_mgmt(); // constructor
+    Hardware_mgmt();  // constructor
+    ~Hardware_mgmt(); // destructor
 
-    void process();  // check sensors and set motors one time
+    void setup();     // setup hardware
+    void process();   // check sensors and set motors one time
 
   private:
   //////////////////////////////////////////////////////////////
@@ -36,28 +38,29 @@ class Hardware_mgmt {
   // sensors:
     // azimuth potentiometer sensor
     bool   azi_pot_enable =        true;             // enable or disable feature
-    int    azi_potentiometer_pin = 3;                // connect the middle pin 
+    int    azi_potentiometer_pin = A0;               // connect the middle pin 
     double azi_pot_min_degree    = 0;                // minimum angle of potentiometer
     int    azi_pot_min_value     = 0;                // minimum analogue reading of potentiometer
     double azi_pot_max_degree    = 340;              // maximum angle of potentiometer
-    int    azi_pot_max_value     = 1024;             // maximum analogue reading of potentiometer, 1024 = 5V
+    int    azi_pot_max_value     = 1024;             // maximum analogue reading of potentiometer, 1024 = 3.3V
     
     // elevation potentiometer sensor
     bool   ele_pot_enable =        true;             // enable or disable feature
-    int    ele_potentiometer_pin = 4;                // connect the middle pin 
+    // int    ele_potentiometer_pin = A1;               // connect the middle pin 
     double ele_pot_min_degree    = 0;                // minimum angle of potentiometer
     int    ele_pot_min_value     = 0;                // minimum analogue reading of potentiometer
     double ele_pot_max_degree    = 340;              // maximum angle of potentiometer
-    int    ele_pot_max_value     = 1024;             // maximum analogue reading of potentiometer, 1024 = 5V
+    int    ele_pot_max_value     = 1024;             // maximum analogue reading of potentiometer, 1024 = 3.3V
         
     // azimuth rotary sensor
     bool   azi_rotary_enable =     true;             // enable or disable feature
     int    azi_rotary_pins[2] =    {5, 6};           // set pins here
+    int    azi_rotary_pulses =     3600;             // set nr of pulses per full azi rotation (360 degree)
 
     // elevation rotary sensor
     bool   ele_rotary_enable =     true;             // enable or disable feature
     int    ele_rotary_pins[2] =    {7, 8};           // set pins here
-
+    int    ele_rotary_pulses =     3600;             // set nr of pulses per full ele rotation (360 degree)
 
   // actuators:
     // azimuth stepper motor
@@ -98,17 +101,39 @@ class Hardware_mgmt {
     
     int32_t azi_current_enc; // current reading of azimuth encoder
     int32_t ele_current_enc; // current reading of elevation encoder
-    
+
+    int azi_pot_value;     // current reading of azimuth potentiometer
+    int ele_pot_value;     // current reading of elevation potentiometer
 };
 
 Hardware_mgmt::Hardware_mgmt() {
+    azi_encoder = nullptr;
+    ele_encoder = nullptr;
+    azi_stepper = nullptr;
+    ele_stepper = nullptr;
+}
+
+Hardware_mgmt::~Hardware_mgmt() {
+  delete azi_encoder;
+  delete ele_encoder;
+  delete azi_stepper;
+  delete ele_stepper;
+}
+
+void Hardware_mgmt::setup() {
+  // remove old allocations
+  delete azi_encoder;
+  delete ele_encoder;
+  delete azi_stepper;
+  delete ele_stepper;
+
+  // enable new objects
   if(azi_rotary_enable) {
     azi_encoder = new Encoder(azi_rotary_pins[0], azi_rotary_pins[1]);
   }
   if(ele_rotary_enable) {
     ele_encoder = new Encoder(ele_rotary_pins[0], ele_rotary_pins[1]);
   }
-
   
   if(azi_stepper_enable) {
     azi_stepper = new Stepper(azi_steps_rev, azi_stepper_pins[0], azi_stepper_pins[1], azi_stepper_pins[2], azi_stepper_pins[3]);
@@ -116,6 +141,15 @@ Hardware_mgmt::Hardware_mgmt() {
   if(ele_stepper_enable) {
     ele_stepper = new Stepper(ele_steps_rev, ele_stepper_pins[0], ele_stepper_pins[1], ele_stepper_pins[2], ele_stepper_pins[3]);
   }
+
+  // connect sensors
+  if(azi_pot_enable) {
+    
+  }
+
+  // calculate settings
+  
+  
 }
 
 void Hardware_mgmt::process() {

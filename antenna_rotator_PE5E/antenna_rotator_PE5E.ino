@@ -242,6 +242,8 @@ void setup() {
   Serial.print("http://");
   Serial.print(WiFi.localIP());
   Serial.println("/");
+
+  // hardware.setup();
 }
  
 void loop() {
