@@ -3,10 +3,17 @@
 
 class Rotctl_impl {
   public:
-    Rotctl_impl() = default; // default constructor
-    String input_data(String request); // get data from tcp connection
+    Rotctl_impl() = default;             // default constructor
+    void set_shared_data(dataset *data); // shared data
+    String input_data(String request);   // get data from tcp connection
 
+  private:
+    dataset *_data;
 };
+
+void Rotctl_impl::set_shared_data(dataset *data) {
+  _data = data;
+}
 
  
 String Rotctl_impl::input_data(String request) {
@@ -38,12 +45,12 @@ String Rotctl_impl::input_data(String request) {
     Serial.print("Elevation: ");
     Serial.println(elevation);
 
-    requested_azimuth = azimuth;
-    requested_elevation = elevation;
+    _data->requested_azimuth = azimuth;
+    _data->requested_elevation = elevation;
 
     // for testing purposes:
-    current_azimuth = azimuth;
-    current_elevation = elevation;
+    _data->current_azimuth = azimuth;
+    _data->current_elevation = elevation;
     
     // reply: "RPRT x\n" where x=0 is success and else is error
     reply = "RPRT 0\n";
@@ -54,21 +61,21 @@ String Rotctl_impl::input_data(String request) {
     // reply: azimuth\n elevation\n
     // if not available: RPRT x\n where x is the Hamlib error code
     Serial.println("request: get position");
-    reply = String(current_azimuth);
+    reply = String(_data->current_azimuth);
     reply.concat('\n');
-    reply.concat(current_elevation);
+    reply.concat(_data->current_elevation);
     reply.concat('\n');
   }
 
   // get information //
   else if(request.substring(0, 1) == "_" || request.substring(0, 8) == "get_info") {
     reply = "Antenna rotator by PE5E\n";
-    if(manual_control == true) {
+    if(_data->manual_control == true) {
       reply += "Rotator is now in manual mode\n";
     }
   }
 
-  if(manual_control == false) {
+  if(_data->manual_control == false) {
 
     // move rotator //
     if(request.substring(0, 1) == "M" || request.substring(0, 4) == "move") {
@@ -84,8 +91,8 @@ String Rotctl_impl::input_data(String request) {
       int req_direction = request.substring(0, request.indexOf(" ")).toInt(); // take first part until a space char and convert to float value
       int req_speed = request.substring(request.indexOf(" ") + 1, request.length()).toInt(); // take the part from the space char until the end and convert to float value
 
-      requested_azimuth = req_direction;
-      rotation_speed = req_speed;
+      _data->requested_azimuth = req_direction;
+      _data->rotation_speed = req_speed;
       
       reply = "RPRT 0\n";
     }
