@@ -195,11 +195,11 @@ The rotator is now controlled %MANUAL_CONTROL_TEXT%
 </div>
 <br><br>
 
-<img src="https://raw.githubusercontent.com/PE5E/ESP8266/master/antenna_rotator_PE5E/images/compass.jpg" height="300" width="300" class="compass">
-<img src="https://raw.githubusercontent.com/PE5E/ESP8266/master/antenna_rotator_PE5E/images/red_arrow_up.png" height="300" width="14" class="arrow" data-rotate=%CURRENT_AZIMUTH% data-xaxis="center" data-yaxis="center">
-<img src="https://raw.githubusercontent.com/PE5E/ESP8266/master/antenna_rotator_PE5E/images/0-90deg.jpg" height="300" width="300" class="elevations">
-<img src="https://raw.githubusercontent.com/PE5E/ESP8266/master/antenna_rotator_PE5E/images/red_arrow_left.png" height="14" width="300" class="arrow_left" data-rotate=%CURRENT_ELEVATION% data-xaxis="right" data-yaxis="center">
-<img src="https://raw.githubusercontent.com/PE5E/ESP8266/master/antenna_rotator_PE5E/images/red_arrow_up.png" height="100" width="100" class="arrow_action" data-rotate=%CURRENT_ACTION_DEG% data-xaxis="center" data-yaxis="center" id="action_arrow">
+<img src="https://raw.githubusercontent.com/PE5E/Antenna-rotator-by-PE5E/master/images/compass.jpg" height="300" width="300" class="compass">
+<img src="https://raw.githubusercontent.com/PE5E/Antenna-rotator-by-PE5E/master/images/red_arrow_up.png" height="300" width="14" class="arrow" data-rotate=%CURRENT_AZIMUTH% data-xaxis="center" data-yaxis="center">
+<img src="https://raw.githubusercontent.com/PE5E/Antenna-rotator-by-PE5E/master/images/0-90deg.jpg" height="300" width="300" class="elevations">
+<img src="https://raw.githubusercontent.com/PE5E/Antenna-rotator-by-PE5E/master/images/red_arrow_left.png" height="14" width="300" class="arrow_left" data-rotate=%CURRENT_ELEVATION% data-xaxis="right" data-yaxis="center">
+<img src="https://raw.githubusercontent.com/PE5E/Antenna-rotator-by-PE5E/master/images/red_arrow_up.png" height="100" width="100" class="arrow_action" data-rotate=%CURRENT_ACTION_DEG% data-xaxis="center" data-yaxis="center" id="action_arrow">
 
 <script>
   $('img').each(function() {
