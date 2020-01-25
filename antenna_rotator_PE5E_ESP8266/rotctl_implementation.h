@@ -4,15 +4,15 @@
 class Rotctl_impl {
   public:
     Rotctl_impl() = default;             // default constructor
-    void set_shared_data(dataset *data); // shared data
+    void set_shared_data(dataset *shared_data); // shared data
     String input_data(String request);   // get data from tcp connection
 
   private:
     dataset *_data;
 };
 
-void Rotctl_impl::set_shared_data(dataset *data) {
-  _data = data;
+void Rotctl_impl::set_shared_data(dataset *shared_data) {
+  _data = shared_data;
 }
 
  

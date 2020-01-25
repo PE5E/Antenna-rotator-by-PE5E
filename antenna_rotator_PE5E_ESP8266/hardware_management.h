@@ -53,23 +53,23 @@ class Hardware_mgmt {
     int    ele_pot_max_value     = 1024;             // maximum analogue reading of potentiometer, 1024 = 3.3V
         
     // azimuth rotary sensor
-    bool   azi_rotary_enable =     true;             // enable or disable feature
+    bool   azi_rotary_enable =     false;             // enable or disable feature
     int    azi_rotary_pins[2] =    {5, 6};           // set pins here
     int    azi_rotary_pulses =     3600;             // set nr of pulses per full azi rotation (360 degree)
 
     // elevation rotary sensor
-    bool   ele_rotary_enable =     true;             // enable or disable feature
+    bool   ele_rotary_enable =     false;             // enable or disable feature
     int    ele_rotary_pins[2] =    {7, 8};           // set pins here
     int    ele_rotary_pulses =     3600;             // set nr of pulses per full ele rotation (360 degree)
 
   // actuators:
     // azimuth stepper motor
-    bool   azi_stepper_enable =    true;             // enable or disable feature
+    bool   azi_stepper_enable =    false;             // enable or disable feature
     int    azi_steps_rev =         200;              // set the number of steps per revolution
     int    azi_stepper_pins[4] =   {9, 10, 11, 12};   // set pins here
 
     // elevation stepper motor
-    bool   ele_stepper_enable =    true;              // enable or disable feature
+    bool   ele_stepper_enable =    false;              // enable or disable feature
     int    ele_steps_rev =         200;               // number of steps per revolution
     int    ele_stepper_pins[4] =   {13, 14, 15, 16};  // set pins here
 
@@ -102,8 +102,8 @@ class Hardware_mgmt {
     int32_t azi_current_enc; // current reading of azimuth encoder
     int32_t ele_current_enc; // current reading of elevation encoder
 
-    int azi_pot_value;     // current reading of azimuth potentiometer
-    int ele_pot_value;     // current reading of elevation potentiometer
+    int azi_pot_value;       // current reading of azimuth potentiometer
+    int ele_pot_value;       // current reading of elevation potentiometer
 };
 
 Hardware_mgmt::Hardware_mgmt() {
@@ -153,11 +153,13 @@ void Hardware_mgmt::setup() {
 }
 
 void Hardware_mgmt::process() {
+  /*
   azi_current_enc = azi_encoder->read();
   ele_current_enc = ele_encoder->read();
   
   azi_stepper->setSpeed(60);        // set speed to 60 rpm
   azi_stepper->step(azi_steps_rev); // rotate 1 rev. positive is CW, negative is CCW
+  */
 }
 
 #endif // HARDWARE_MANAGEMENT_H

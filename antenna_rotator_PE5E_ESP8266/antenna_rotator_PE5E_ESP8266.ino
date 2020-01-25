@@ -11,15 +11,15 @@
  */
 
 #include "dataset.h"
-dataset   *data;           // holds all shared data
+dataset   *shared_data = new dataset;           // holds all shared data
 
 #include "ESPAsyncWebServer.h"
-AsyncWebServer http_server(data->webserver_address);
+AsyncWebServer http_server(shared_data->webserver_address);
 
 #include "controlport_server.h"    // controlport server
 #include "hardware_management.h"   // controlling motors and reading sensors
+#include "ESPAsyncTCP.h"              // used by rotctl
 
-#include "ESPAsyncTCP.h"           // used by rotctl
 #include "index.h"                 // HTML webpage contents
  
 const char* ssid = "Ziggo";
@@ -42,31 +42,31 @@ void onRequest(AsyncWebServerRequest *request){
 String processor(const String& var)
 {
   if(var == "DIRECTION_STATUS"){
-    return data->moving_status_text[data->direction_status];
+    return shared_data->moving_status_text[shared_data->direction_status];
   }
 
   if(var == "CURRENT_AZIMUTH"){
-    return String(data->current_azimuth);
+    return String(shared_data->current_azimuth);
   }
 
   if(var == "CURRENT_ELEVATION"){
-    return String(data->current_elevation);
+    return String(shared_data->current_elevation);
   }
 
   if(var == "REQUESTED_AZIMUTH"){
-    return String(data->requested_azimuth);
+    return String(shared_data->requested_azimuth);
   }
 
   if(var == "REQUESTED_ELEVATION"){
-    return String(data->requested_elevation);
+    return String(shared_data->requested_elevation);
   }
   
   if(var == "ROTATION_SPEED"){
-    return String(data->rotation_speed);
+    return String(shared_data->rotation_speed);
   }
   
   if(var == "MANUAL_CONTROL_TEXT"){
-      if(data->manual_control) {
+      if(shared_data->manual_control) {
         return String("manually");
       }
       else {
@@ -75,29 +75,29 @@ String processor(const String& var)
   }
 
   if(var == "CURRENT_ACTION_DEG"){
-      switch(data->direction_status) {
-        case data->moving_status::standstill:
+      switch(shared_data->direction_status) {
+        case shared_data->moving_status::standstill:
           return String("0");
           break;
-        case data->moving_status::cw:
+        case shared_data->moving_status::cw:
           return String("90");
           break;
-        case data->moving_status::ccw:
+        case shared_data->moving_status::ccw:
           return String("270");
           break;
-        case data->moving_status::up:
+        case shared_data->moving_status::up:
           return String("0");
           break;
-        case data->moving_status::down:
+        case shared_data->moving_status::down:
           return String("180");
           break;
       }
   }
 
   if(var == "ERROR_CODE_HTML") {
-    if(data->error_content_html != "") {
+    if(shared_data->error_content_html != "") {
       String html = R"12345abcd(<div style="padding:10px;border:1px solid;border-radius:5px;color:#ff0000"><H2 style="color:#ff0000">Error</H2><b style="color:#ff0000">)12345abcd";
-      html += data->error_content_html;
+      html += shared_data->error_content_html;
       html += "</b></div>"; 
       return html;
     }
@@ -113,40 +113,40 @@ void onEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventTyp
 }
 
 void processRequest(AsyncWebServerRequest *request){
-  data->error_content_html = ""; // remove last error
+  shared_data->error_content_html = ""; // remove last error
   
-  if(data->manual_control == true) {
+  if(shared_data->manual_control == true) {
     if(request->hasParam("direction")) {
       AsyncWebParameter* p = request->getParam("direction");
       String directionCommand = p->value().c_str();
       if(directionCommand == "UP") {
-        data->direction_status = data->moving_status::up;
+        shared_data->direction_status = shared_data->moving_status::up;
       }
       else if(directionCommand == "DOWN") {
-        data->direction_status = data->moving_status::down;
+        shared_data->direction_status = shared_data->moving_status::down;
       }
       else if(directionCommand == "CCW->LEFT") {
-        data->direction_status = data->moving_status::ccw;
+        shared_data->direction_status = shared_data->moving_status::ccw;
       }
       else if(directionCommand == "CW->RIGHT") {
-        data->direction_status = data->moving_status::cw;
+        shared_data->direction_status = shared_data->moving_status::cw;
       }
       else if(directionCommand == "STOP") {
-        data->direction_status = data->moving_status::standstill;
+        shared_data->direction_status = shared_data->moving_status::standstill;
       }
     }
 
     if(request->hasParam("azi")) {
       AsyncWebParameter* p = request->getParam("azi");
       String azi = p->value().c_str();
-      data->requested_azimuth = azi.toFloat();
+      shared_data->requested_azimuth = azi.toFloat();
     }
     if(request->hasParam("ele")) {
       AsyncWebParameter* p = request->getParam("ele");
       String ele = p->value().c_str();
-      data->requested_elevation = ele.toFloat();
-      if(data->requested_elevation > 90.0) {
-        data->error_content_html = "Elevation is more than the maximum value. Please select a lower number.";
+      shared_data->requested_elevation = ele.toFloat();
+      if(shared_data->requested_elevation > 90.0) {
+        shared_data->error_content_html = "Elevation is more than the maximum value. Please select a lower number.";
         Serial.println("Error. Elevation above max");
       }
     }
@@ -154,7 +154,7 @@ void processRequest(AsyncWebServerRequest *request){
     if(request->hasParam("set_speed")) {
       AsyncWebParameter* p = request->getParam("set_speed");
       String ele = p->value().c_str();
-      data->rotation_speed = ele.toInt();
+      shared_data->rotation_speed = ele.toInt();
     }
   }
 
@@ -162,10 +162,10 @@ void processRequest(AsyncWebServerRequest *request){
       AsyncWebParameter* p = request->getParam("controlmode");
       String control_mode = p->value().c_str();
       if(control_mode == "MANUAL") {
-        data->manual_control = true;
+        shared_data->manual_control = true;
       }
       else if(control_mode == "AUTOMATIC") {
-        data->manual_control = false;
+        shared_data->manual_control = false;
       }
     }
 }
@@ -193,7 +193,8 @@ void setup() {
     request->send_P(200, "text/html", index_html, processor);
   });
 
-  AsyncServer* control_server = new AsyncServer(data->rotctl_address); // server for rotctl commands
+  // rotctl:
+  AsyncServer* control_server = new AsyncServer(shared_data->rotctl_address); // server for rotctl commands
   control_server->onClient(&handleNewClient, control_server);
  
 // Connect to WiFi network
@@ -224,7 +225,7 @@ void setup() {
 }
  
 void loop() {
-  if(data->direction_status > 0) {
+  if(shared_data->direction_status > 0) {
     digitalWrite(ledPin, LOW); // LOW is on
   }
   else {
