@@ -1,0 +1,100 @@
+rotctl implementation requirements
+
+Source: http://manpages.ubuntu.com/manpages/xenial/man8/rotctld.8.html
+
+Below is listed only what will be implemented (eventually)
+
+rotctld communicates to a client through a TCP socket  using  text  commands  shared  with
+rotctl.  The  protocol  is  simple,  commands  are sent to rotctld on one line and rotctld
+responds to "get" commands with the requested  values,  one  per  line,  when  successful,
+otherwise, it responds with one line "RPRT x", where x is a negative number indicating the
+error code.  Commands that do not return values respond with the line "RPRT x", where x is
+zero when successful, otherwise is a regative number indicating the error code.  Each line
+is terminated with a newline '\n' character.  This protocol is primarily for  use  by  the
+NET rotctl (rot model 2) backend.
+
+COMMANDS
+Commands  can  be  sent  over the TCP socket either as a single char, or as a long command name plus the value(s) space separated on one '\n' terminated line. See PROTOCOL.
+Since most of the Hamlib operations have a set and a get method, an upper case letter will be  used  for  set  methods  whereas the corresponding lower case letter refers to the get method.  Each operation also has a long name; prepend a backslash to send a  long  command name.
+
+Here is a summary of the supported commands (In the case  of  "set"  commands  the  quoted
+string  is  replaced  by  the value in the description.  In the case of "get" commands the
+quoted string is the key name of the value returned.):
+
+P, set_pos 'Azimuth' 'Elevation'
+      Set position: Azimuth and Elevation as double precision floating point values.
+
+p, get_pos
+      Get position: 'Azimuth' and 'Elevation' as double precision floating point values.
+
+M, move 'Direction' 'Speed'
+      Move the rotator in a specific direction at the given rate.
+
+      Values are integers where Direction is defined as 2 = Up, 4 = Down, 8 =  Left,  and
+      16  =  Right.   Speed  is  an  integer  between  1  and 100.  Not all backends that
+      implement the move command use the Speed value.   At  this  time  only  the  gs232a
+      utilizes the Speed parameter.
+
+S, stop
+      Stop the rotator.
+
+K, park
+      Park the antenna.
+
+C, set_conf 'Token' 'Value'
+      Set Token to Value.
+
+      Backend dependent.  Needs testing.
+
+R, reset 'Reset'
+      Reset the rotator.
+
+      Integer value of '1' for Reset All.
+
+_, get_info
+      Get misc information about the rotator.
+
+      At the moment returns 'Model Name'.
+
+w, send_cmd 'Cmd'
+      Send raw command string to rotator.
+
+      For binary protocols enter values as \0xAA\0xBB.  Expect a 'Reply' from the rotator
+      which will likely be a binary block or an ASCII string.
+
+
+PROTOCOL
+Default Protocol
+The  rotctld  protocol is intentionally simple. Commands are entered on a single line with
+any needed values. In Perl, reliable results are  obtained  by  terminating  each  command
+string with a newline character, '\n'.
+
+Example set (Perl code):
+
+print $socket "P 135 10\n";
+
+print $socket "\\set_pos 135 10\n";   # escape leading '\'
+
+A  one  line  response  will be sent as a reply to set commands, "RPRT x\n" where x is the
+Hamlib error code with '0' indicating success of the command.
+
+Responses from rotctld get commands are text values and match the same tokens used in  the
+set  commands.  Each value is returned on its own line.  On error the string "RPRT x\n" is
+returned where x is the Hamlib error code.
+
+Example get (Perl code):
+
+print $socket "p\n";
+"135"
+"10"
+
+Most get functions return one to three values.  A  notable  exception  is  the  \dump_caps
+function which returns many lines of key:value pairs.
+
+This  protocol  is  primarily used by the NET rotctl (rotctl model 2) backend which allows
+applications already written for Hamlib's C API to take advantage of rotctld  without  the
+need  of rewriting application code.  An application's user can select rotor model 2 ("NET
+rotctl") and then set rot_pathname to "localhost:4533" or other network host:port (set  by
+the -t option above).
+
+
