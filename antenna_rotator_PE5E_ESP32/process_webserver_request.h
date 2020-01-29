@@ -20,19 +20,19 @@ void processRequest(AsyncWebServerRequest *request){
       AsyncWebParameter* p = request->getParam("direction");
       String directionCommand = p->value().c_str();
       if(directionCommand == "UP") {
-        shared_data->direction_status = shared_data->moving_status::up;
+        shared_data->direction_request = dataset::moving_status::up;
       }
       else if(directionCommand == "DOWN") {
-        shared_data->direction_status = shared_data->moving_status::down;
+        shared_data->direction_request = dataset::moving_status::down;
       }
       else if(directionCommand == "CCW->LEFT") {
-        shared_data->direction_status = shared_data->moving_status::ccw;
+        shared_data->direction_request = dataset::moving_status::ccw;
       }
       else if(directionCommand == "CW->RIGHT") {
-        shared_data->direction_status = shared_data->moving_status::cw;
+        shared_data->direction_request = dataset::moving_status::cw;
       }
       else if(directionCommand == "STOP") {
-        shared_data->direction_status = shared_data->moving_status::standstill;
+        shared_data->direction_request = dataset::moving_status::standstill;
       }
     }
 

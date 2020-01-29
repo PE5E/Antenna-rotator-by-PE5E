@@ -32,7 +32,15 @@ class Hardware_mgmt {
     void process();                      // check sensors and set motors one time
 
   private:
-    dataset *_data;
+    void go_left();
+    void go_right();
+    void go_up();
+    void go_down();
+    void stop_azi();
+    void stop_ele();
+
+  private:
+    dataset *_data = nullptr;
     
   //////////////////////////////////////////////////////////////
   //  USE THIS SECTION TO SELECT YOUR HARDWARE CONFIGURATION  //
@@ -41,7 +49,7 @@ class Hardware_mgmt {
   // sensors:
     // azimuth potentiometer sensor
     bool   azi_pot_enable =        false;             // enable or disable feature
-    int    azi_potentiometer_pin = A0;               // connect the middle pin 
+    int    azi_potentiometer_pin = 33;               // connect the middle pin 
     double azi_pot_min_degree    = 0;                // minimum angle of potentiometer
     int    azi_pot_min_value     = 0;                // minimum analogue reading of potentiometer
     double azi_pot_max_degree    = 340;              // maximum angle of potentiometer
@@ -88,6 +96,11 @@ class Hardware_mgmt {
     bool   ele_dc_pwm =            true;              // true for pwm driver, false if only on/off
     int    ele_dc_bridge_pins[2] = {18, 5};           // set pins here
 
+    // Maximum deviation
+    double azi_deviation = 1.5;                         // maximum deviation
+    double ele_deviation = 1.5;                         // maximum deviation
+
+
   //////////////////////////////////////////////////////////////
   //  //  //  //  //  END OF HARDWARE CONFIGURATION   //  //  //
   ////////////////////////////////////////////////////////////// 
@@ -98,15 +111,12 @@ class Hardware_mgmt {
     Stepper *azi_stepper = nullptr;
     Stepper *ele_stepper = nullptr;
     
-    // rotating speed setting is equal for azi and ele
-    int    azi_current_speed = 0; // percentage of the rotating speed
-    int    ele_current_speed = 0; // percentage of the rotating speed
-    
     int32_t azi_current_enc = 0; // current reading of azimuth encoder
     int32_t ele_current_enc = 0; // current reading of elevation encoder
 
-    double azi_reading = 0.0;    // current azimuth in degrees
-    double ele_reading = 0.0;    // current elevation in degrees
+    // moving status
+    bool azi_moving = false;
+    bool ele_moving = false;
 };
 
 Hardware_mgmt::Hardware_mgmt() {
@@ -127,13 +137,8 @@ Hardware_mgmt::~Hardware_mgmt() {
   delete ele_stepper;
 }
 
+// setup hardware
 void Hardware_mgmt::setup() {
-  // remove old allocations
-  delete azi_encoder;
-  delete ele_encoder;
-  delete azi_stepper;
-  delete ele_stepper;
-
   // enable new objects
   if(azi_rotary_enable) {
     azi_encoder = new Encoder(azi_rotary_pins[0], azi_rotary_pins[1]);
@@ -152,28 +157,104 @@ void Hardware_mgmt::setup() {
   // connect sensors
   if(azi_pot_enable) {
     pinMode(azi_potentiometer_pin, INPUT);
+    _data->current_azimuth = map(analogRead(azi_potentiometer_pin), azi_pot_min_value, azi_pot_max_value, azi_pot_min_degree, azi_pot_max_degree);
+    _data->requested_azimuth = _data->current_azimuth;
   }
   if(ele_pot_enable) {
     pinMode(ele_potentiometer_pin, INPUT);
+    _data->current_elevation = map(analogRead(ele_potentiometer_pin), ele_pot_min_value, ele_pot_max_value, ele_pot_min_degree, ele_pot_max_degree);
+    _data->requested_elevation = _data->current_elevation;
   }
 
+
   if(azi_dc_enable) {
-    pinMode(azi_dc_pin, OUTPUT);
+    ledcSetup(0, 20000, 8);                 // channel 0, 20000Hz, 8 bit
+    ledcAttachPin(azi_dc_pin, 0);           // attach pin to channel 0
     pinMode(azi_dc_bridge_pins[0], OUTPUT);
     pinMode(azi_dc_bridge_pins[1], OUTPUT);
   }
   if(ele_dc_enable) {
-    ledcSetup(0, 20000, 8);                  // channel 0, 1000Hz, 8 bit
-    ledcAttachPin(ele_dc_pin, 0);           // attach pin to channel 0
-    // pinMode(ele_dc_pin, OUTPUT);
+    ledcSetup(1, 20000, 8);                 // channel 1, 20000Hz, 8 bit
+    ledcAttachPin(ele_dc_pin, 1);           // attach pin to channel 1
     pinMode(ele_dc_bridge_pins[0], OUTPUT);
     pinMode(ele_dc_bridge_pins[1], OUTPUT);
   }
-
-  
-  
 }
 
+void Hardware_mgmt::go_left() {
+  if(azi_dc_enable){
+    digitalWrite(azi_dc_bridge_pins[0], LOW);
+    digitalWrite(azi_dc_bridge_pins[1], HIGH);
+    if(azi_dc_pwm) {
+      ledcWrite(0, _data->rotation_speed); // channel 0 is azi motor
+    }
+    else {
+      ledcWrite(0, 255); // channel 0 is ele motor
+    }
+  }
+  else if (azi_stepper_enable) { 
+  }
+}
+void Hardware_mgmt::go_right() {
+  if(azi_dc_enable){
+    digitalWrite(azi_dc_bridge_pins[0], LOW);
+    digitalWrite(azi_dc_bridge_pins[1], HIGH);
+    if(azi_dc_pwm) {
+      ledcWrite(0, _data->rotation_speed); // channel 0 is azi motor
+    }
+    else {
+      ledcWrite(0, 255); // channel 0 is ele motor
+    }
+  }
+  else if (azi_stepper_enable) { 
+  }
+}
+void Hardware_mgmt::go_up() {
+  if(ele_dc_enable){
+    digitalWrite(ele_dc_bridge_pins[0], HIGH);
+    digitalWrite(ele_dc_bridge_pins[1], LOW);
+    if(ele_dc_pwm) {
+      ledcWrite(1, _data->rotation_speed); // channel 0 is ele motor
+    }
+    else {
+      ledcWrite(1, 255); // channel 1 is ele motor
+    }
+  }
+  else if (ele_stepper_enable) { 
+  }
+}
+void Hardware_mgmt::go_down() {
+  if(ele_dc_enable){
+    digitalWrite(ele_dc_bridge_pins[0], LOW);
+    digitalWrite(ele_dc_bridge_pins[1], HIGH);
+    if(ele_dc_pwm) {
+      ledcWrite(1, _data->rotation_speed); // channel 0 is ele motor
+    }
+    else {
+      ledcWrite(1, 255); // channel 1 is ele motor
+    }
+  }
+  else if (ele_stepper_enable) { 
+  }
+}
+void Hardware_mgmt::stop_azi() {
+  if(azi_dc_enable){
+      ledcWrite(0, 0); // channel 0 is azi motor
+      azi_moving = false;
+  }
+  else if (azi_stepper_enable) { 
+  }
+}
+void Hardware_mgmt::stop_ele() {
+  if(ele_dc_enable){
+      ledcWrite(1, 0); // channel 1 is ele motor
+      ele_moving = false;
+  }
+  else if (ele_stepper_enable) { 
+  }
+}
+
+// loop over this process function
 void Hardware_mgmt::process() {
   /*
   azi_current_enc = azi_encoder->read();
@@ -184,55 +265,107 @@ void Hardware_mgmt::process() {
   */
 
   if(azi_pot_enable) {
-    azi_reading = map(analogRead(azi_potentiometer_pin), azi_pot_min_degree, azi_pot_max_degree, azi_pot_min_value, azi_pot_max_value);
-    Serial.print("Current azimuth: ");
-    Serial.println(azi_reading);
+    _data->current_azimuth = map(analogRead(azi_potentiometer_pin), azi_pot_min_value, azi_pot_max_value, azi_pot_min_degree, azi_pot_max_degree);
   }
   if(ele_pot_enable) {
     _data->current_elevation = map(analogRead(ele_potentiometer_pin), ele_pot_min_value, ele_pot_max_value, ele_pot_min_degree, ele_pot_max_degree);
   }
+  
 
-  if(shared_data->direction_status == shared_data->moving_status::up) {
-    if(ele_dc_enable){
-      digitalWrite(ele_dc_bridge_pins[0], HIGH);
-      digitalWrite(ele_dc_bridge_pins[1], LOW);
-      if(ele_dc_pwm) {
-        ledcWrite(0, _data->rotation_speed); // channel 0 is ele motor
+
+  switch(_data->direction_request) {
+    case dataset::moving_status::ccw:
+      if(ele_moving) {
+        stop_ele();
       }
-      else {
-        ledcWrite(0, 255); // channel 0 is ele motor
+      _data->requested_azimuth -= azi_deviation + 1;
+      go_left();
+      _data->direction_status = dataset::moving_status::ccw;
+      break;
+  
+    case dataset::moving_status::cw:
+      if(ele_moving) {
+        stop_ele();
       }
-    }
-    else if (ele_stepper_enable) { 
-      
-    }
+      _data->requested_azimuth += azi_deviation + 1;
+      go_right();
+      _data->direction_status = dataset::moving_status::cw;
+      break;
+  
+    case dataset::moving_status::up:
+      if(azi_moving) {
+        stop_azi();
+      }
+      _data->requested_elevation += ele_deviation + 1;
+      go_up();
+      _data->direction_status = dataset::moving_status::up;
+      break;
+  
+    case dataset::moving_status::down:
+      if(azi_moving) {
+        stop_azi();
+      }
+      _data->requested_elevation -= ele_deviation + 1;
+      go_down();
+      _data->direction_status = dataset::moving_status::down;
+      break;
+  
+    case dataset::moving_status::standstill:
+      stop_azi();
+      stop_ele();
+      _data->requested_azimuth = _data->current_azimuth;
+      _data->requested_elevation = _data->current_elevation;
+      break;
+
+    case dataset::moving_status::none:
+      break;
   }
 
-  if(shared_data->direction_status == shared_data->moving_status::down) {
-    if(ele_dc_enable){
-      digitalWrite(ele_dc_bridge_pins[0], LOW);
-      digitalWrite(ele_dc_bridge_pins[1], HIGH);
-      if(ele_dc_pwm) {
-        ledcWrite(0, _data->rotation_speed); // channel 0 is ele motor
-      }
-      else {
-        ledcWrite(0, 255); // channel 0 is ele motor
-      }
-    }
-    else if (ele_stepper_enable) { 
-      
-    }
-  }
+  
 
-  if(shared_data->direction_status == shared_data->moving_status::standstill) {
-    if(ele_dc_enable){
-        ledcWrite(0, 0); // channel 0 is ele motor
-      }
-      
-    else if (ele_stepper_enable) { 
-      
+
+  if(_data->requested_azimuth < (_data->current_azimuth - azi_deviation)) {
+    go_left();
+    azi_moving = true;
+    _data->direction_status = dataset::moving_status::ccw; 
+    _data->direction_request = dataset::moving_status::none; 
+  }
+  else if(_data->requested_azimuth > (_data->current_azimuth + azi_deviation)) {
+    go_right();
+    azi_moving = true;
+    _data->direction_status = dataset::moving_status::cw; 
+    _data->direction_request = dataset::moving_status::none; 
+    //////////////////
+
+    fix something here
+
+    ///////////
+  }
+  else {
+    stop_azi();
+    if(!ele_moving){
+      _data->direction_status = dataset::moving_status::standstill;
     }
   }
+  
+  if(_data->requested_elevation < (_data->current_elevation - ele_deviation)) {
+    go_down();
+    ele_moving = true;
+    _data->direction_status = dataset::moving_status::down; 
+    _data->direction_request = dataset::moving_status::none; 
+  }
+  else if(_data->requested_elevation > (_data->current_elevation + ele_deviation)) {
+    go_up();
+    ele_moving = true;
+    _data->direction_status = dataset::moving_status::up; 
+    _data->direction_request = dataset::moving_status::none; 
+  }
+  else {
+    stop_ele();
+    if(!azi_moving){
+      _data->direction_status = dataset::moving_status::standstill;
+    }
+  }  
   
 }
 

@@ -13,7 +13,7 @@
 #include "Arduino.h"
 
 #include "dataset.h"
-dataset   *shared_data = new dataset;           // holds all shared data
+dataset   *shared_data = new dataset;  // holds all shared data
 
 #include "ESPAsyncWebServer.h"
 AsyncWebServer http_server(shared_data->webserver_address);
@@ -33,7 +33,7 @@ Rotctl_impl rotctl;                    // translates rotctldata to actions
 const char* ssid = "Ziggo";
 const char* password = "Tijdelijk_Netwerk_Voor_Gasten#";
  
-int       ledPin = 2    ; // built in led
+int         ledPin = 2    ; // built in led
 
 AsyncWebSocket ws("/ws"); // access at ws://[esp ip]/ws
 AsyncEventSource events("/events"); // event source (Server-Sent events)
@@ -108,5 +108,5 @@ void loop() {
   }
 
   hardware.process();
-  delay(1000); 
+  delay(100); 
 }

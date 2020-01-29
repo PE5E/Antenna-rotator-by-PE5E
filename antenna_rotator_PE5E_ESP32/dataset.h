@@ -19,9 +19,11 @@ struct dataset {
     cw,  // to the right
     ccw, // to the left
     up,
-    down
+    down, 
+    none
   };
   moving_status direction_status = standstill;
+  moving_status direction_request = none;
 
   const char * moving_status_text[5] = {"standing still", "going clockwise", "going counter clockwise", "going up", "going down"};
 };

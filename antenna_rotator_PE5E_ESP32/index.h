@@ -62,7 +62,7 @@ const char index_html[] PROGMEM = R"==+==(
       {
         position: absolute;
         top: 438px;
-        left: 370px;
+        left: 363px;
         z-index: 2;
       }
       .arrow_action
