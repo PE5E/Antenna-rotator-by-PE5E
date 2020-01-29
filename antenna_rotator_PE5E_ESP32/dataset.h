@@ -8,7 +8,7 @@ struct dataset {
   float requested_elevation =  0    ;
   int   webserver_address =    80   ;
   int   rotctl_address =       4533 ; 
-  int   rotation_speed =       100  ; // percentage of the max speed
+  int   rotation_speed =       255  ; // 0 = stop, 255 is max
   
   bool  manual_control =       false;
   

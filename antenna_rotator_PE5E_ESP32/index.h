@@ -103,7 +103,7 @@ const char index_html[] PROGMEM = R"==+==(
       .speed_bar_back
       {
         height:20px;
-        width: 100px;
+        width: 255px;
         background-color: #008811;
         position: absolute;
         top: 150px;
@@ -187,7 +187,7 @@ The rotator is now controlled %MANUAL_CONTROL_TEXT%
 <br>
 
 <form action = "/action" method="get" id="request_speed">
-  Set new maximum speed percentage:  <input type="number" min="1" max="100" step="1" value="%ROTATION_SPEED%" name="set_speed" style="background:black;margin:3"><br>
+  Set new maximum speed percentage:  <input type="number" min="1" max="255" step="1" value="%ROTATION_SPEED%" name="set_speed" style="background:black;margin:3"><br>
   <input type="submit" value="Set speed">
 </form>
 <br>

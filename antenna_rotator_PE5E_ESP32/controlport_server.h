@@ -2,13 +2,10 @@
 #define CONTROLPORT_SERVER_H
 
 // controlport server
-#include "rotctl_implementation.h" // implementation of the rotctl protocol
 
 #define SERVER_HOST_NAME "controlport_server"
 
 static std::vector<AsyncClient*> clients; // a list to hold all clients
-
-Rotctl_impl rotctl; // translates rotctldata to actions
 
  /* clients events */
 static void handleError(void* arg, AsyncClient* client, int8_t error) {
