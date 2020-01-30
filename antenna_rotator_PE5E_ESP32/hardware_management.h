@@ -97,8 +97,8 @@ class Hardware_mgmt {
     int    ele_dc_bridge_pins[2] = {18, 5};           // set pins here
 
     // Maximum deviation
-    double azi_deviation = 1.5;                         // maximum deviation
-    double ele_deviation = 1.5;                         // maximum deviation
+    double azi_deviation = 2.0;                         // maximum deviation
+    double ele_deviation = 2.0;                         // maximum deviation
 
 
   //////////////////////////////////////////////////////////////
@@ -118,6 +118,10 @@ class Hardware_mgmt {
     bool azi_moving = false;
     bool ele_moving = false;
 };
+
+double doublemap(double x, double in_min, double in_max, double out_min, double out_max) {
+  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
 
 Hardware_mgmt::Hardware_mgmt() {
     azi_encoder = nullptr;
@@ -157,12 +161,12 @@ void Hardware_mgmt::setup() {
   // connect sensors
   if(azi_pot_enable) {
     pinMode(azi_potentiometer_pin, INPUT);
-    _data->current_azimuth = map(analogRead(azi_potentiometer_pin), azi_pot_min_value, azi_pot_max_value, azi_pot_min_degree, azi_pot_max_degree);
+    _data->current_azimuth = doublemap(analogRead(azi_potentiometer_pin), azi_pot_min_value, azi_pot_max_value, azi_pot_min_degree, azi_pot_max_degree);
     _data->requested_azimuth = _data->current_azimuth;
   }
   if(ele_pot_enable) {
     pinMode(ele_potentiometer_pin, INPUT);
-    _data->current_elevation = map(analogRead(ele_potentiometer_pin), ele_pot_min_value, ele_pot_max_value, ele_pot_min_degree, ele_pot_max_degree);
+    _data->current_elevation = doublemap(analogRead(ele_potentiometer_pin), ele_pot_min_value, ele_pot_max_value, ele_pot_min_degree, ele_pot_max_degree);
     _data->requested_elevation = _data->current_elevation;
   }
 
@@ -265,10 +269,10 @@ void Hardware_mgmt::process() {
   */
 
   if(azi_pot_enable) {
-    _data->current_azimuth = map(analogRead(azi_potentiometer_pin), azi_pot_min_value, azi_pot_max_value, azi_pot_min_degree, azi_pot_max_degree);
+    _data->current_azimuth = doublemap(analogRead(azi_potentiometer_pin), azi_pot_min_value, azi_pot_max_value, azi_pot_min_degree, azi_pot_max_degree);
   }
   if(ele_pot_enable) {
-    _data->current_elevation = map(analogRead(ele_potentiometer_pin), ele_pot_min_value, ele_pot_max_value, ele_pot_min_degree, ele_pot_max_degree);
+    _data->current_elevation = doublemap(analogRead(ele_potentiometer_pin), ele_pot_min_value, ele_pot_max_value, ele_pot_min_degree, ele_pot_max_degree);
   }
   
 
@@ -337,7 +341,7 @@ void Hardware_mgmt::process() {
     _data->direction_request = dataset::moving_status::none; 
     //////////////////
 
-    fix something here
+    // fix something here
 
     ///////////
   }
