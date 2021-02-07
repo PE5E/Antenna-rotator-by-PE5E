@@ -99,19 +99,20 @@ String Rotctl_impl::input_data(String request) {
     
     // stop //
     else if(request.substring(0, 1) == "S" || request.substring(0, 4) == "stop") {
-        // stop rotating
+        _data->direction_request = dataset::moving_status::standstill;
       reply = "RPRT 0\n";
     }
   
     // park //
     else if(request.substring(0, 1) == "K" || request.substring(0, 4) == "park") {
-        // park the rotator
+        _data->direction_request = dataset::moving_status::standstill;
       reply = "RPRT 0\n";
     }
   
     // reset //
     else if(request.substring(0, 1) == "R" || request.substring(0, 5) == "reset") {
       // reset the rotator
+      _data->direction_request = dataset::moving_status::standstill;
       if(request.endsWith("1")) {
         // reset all
       }

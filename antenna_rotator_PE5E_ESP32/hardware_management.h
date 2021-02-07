@@ -193,10 +193,15 @@ void Hardware_mgmt::go_left() {
       ledcWrite(0, _data->rotation_speed); // channel 0 is azi motor
     }
     else {
-      ledcWrite(0, 255); // channel 0 is ele motor
+      ledcWrite(0, 255);
     }
   }
   else if (azi_stepper_enable) { 
+    if (_data->rotation_speed > 0) {
+      int stepperSpeed = map(_data->rotation_speed, 0, 255, 0, 100);
+      azi_stepper->setSpeed(stepperSpeed);
+      azi_stepper->step(-1 * azi_steps_rev / 100); // negative value for left turn
+    }
   }
 }
 void Hardware_mgmt::go_right() {
@@ -211,6 +216,11 @@ void Hardware_mgmt::go_right() {
     }
   }
   else if (azi_stepper_enable) { 
+    if (_data->rotation_speed > 0) {
+      int stepperSpeed = map(_data->rotation_speed, 0, 255, 0, 100);
+      azi_stepper->setSpeed(stepperSpeed);
+      azi_stepper->step(azi_steps_rev / 100); // positive value for right turn
+    }
   }
 }
 void Hardware_mgmt::go_up() {
@@ -218,13 +228,18 @@ void Hardware_mgmt::go_up() {
     digitalWrite(ele_dc_bridge_pins[0], HIGH);
     digitalWrite(ele_dc_bridge_pins[1], LOW);
     if(ele_dc_pwm) {
-      ledcWrite(1, _data->rotation_speed); // channel 0 is ele motor
+      ledcWrite(1, _data->rotation_speed); // channel 1 is ele motor
     }
     else {
       ledcWrite(1, 255); // channel 1 is ele motor
     }
   }
   else if (ele_stepper_enable) { 
+    if (_data->rotation_speed > 0) {
+      int stepperSpeed = map(_data->rotation_speed, 0, 255, 0, 100);
+      ele_stepper->setSpeed(stepperSpeed);
+      ele_stepper->step(ele_steps_rev / 100); // negative value for left turn
+    }
   }
 }
 void Hardware_mgmt::go_down() {
@@ -232,13 +247,18 @@ void Hardware_mgmt::go_down() {
     digitalWrite(ele_dc_bridge_pins[0], LOW);
     digitalWrite(ele_dc_bridge_pins[1], HIGH);
     if(ele_dc_pwm) {
-      ledcWrite(1, _data->rotation_speed); // channel 0 is ele motor
+      ledcWrite(1, _data->rotation_speed); // channel 1 is ele motor
     }
     else {
       ledcWrite(1, 255); // channel 1 is ele motor
     }
   }
   else if (ele_stepper_enable) { 
+    if (_data->rotation_speed > 0) {
+      int stepperSpeed = map(_data->rotation_speed, 0, 255, 0, 100);
+      ele_stepper->setSpeed(stepperSpeed);
+      ele_stepper->step(-1 * ele_steps_rev / 100); // negative value for left turn
+    }
   }
 }
 void Hardware_mgmt::stop_azi() {
