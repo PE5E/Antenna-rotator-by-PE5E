@@ -187,8 +187,8 @@ void Hardware_mgmt::setup() {
 
 void Hardware_mgmt::go_left() {
   if(azi_dc_enable){
-    digitalWrite(azi_dc_bridge_pins[0], LOW);
-    digitalWrite(azi_dc_bridge_pins[1], HIGH);
+    digitalWrite(azi_dc_bridge_pins[0], HIGH);
+    digitalWrite(azi_dc_bridge_pins[1], LOW);
     if(azi_dc_pwm) {
       ledcWrite(0, _data->rotation_speed); // channel 0 is azi motor
     }
